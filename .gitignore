@@ -1,0 +1,38 @@
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local configuration and credentials
+.env
+.env.*
+.streamlit/secrets.toml
+
+# Local application data (may contain confidential company information)
+app_data/comments.db*
+app_data/uploads/*
+!app_data/uploads/.gitkeep
+app_data/exports/*
+!app_data/exports/.gitkeep
+app_data/meeting_history/*
+!app_data/meeting_history/.gitkeep
+
+# Data files are opt-in: never commit company workbooks, exports, or databases.
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+*.tsv
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
