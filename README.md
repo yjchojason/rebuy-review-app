@@ -41,6 +41,22 @@ Exported reviewed workbooks are stored locally in:
 app_data/exports/
 ```
 
+## Access passcode
+
+The dashboard is protected by a passcode screen. The passcode is intentionally
+not stored in this public repository.
+
+For local development, copy `.streamlit/secrets.toml.example` to
+`.streamlit/secrets.toml` and set `APP_PASSCODE` to the desired value. The real
+secrets file is excluded from Git.
+
+For Streamlit Community Cloud, open the deployed app's settings, select
+**Secrets**, and add:
+
+```toml
+APP_PASSCODE = "your-passcode"
+```
+
 ## First-time setup
 
 ### Option A: Windows double-click

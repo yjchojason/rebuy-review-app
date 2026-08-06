@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import calendar
+import hmac
 import os
 from datetime import date
 from html import escape
@@ -42,6 +43,160 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+
+def _configured_passcode() -> str:
+    """Read the access passcode without storing it in public source control."""
+    try:
+        secret_value = st.secrets.get("APP_PASSCODE", "")
+    except Exception:
+        secret_value = ""
+    return str(secret_value or os.environ.get("REBUY_REVIEW_PASSCODE", "")).strip()
+
+
+def require_passcode() -> None:
+    """Stop page rendering until this browser session supplies the passcode."""
+    if st.session_state.get("rebuy_access_granted") is True:
+        return
+
+    st.markdown(
+        """
+        <style>
+            header[data-testid="stHeader"],
+            section[data-testid="stSidebar"] {
+                display: none !important;
+            }
+
+            .stApp {
+                background:
+                    radial-gradient(circle at 18% 14%, rgba(37, 99, 235, 0.12), transparent 28rem),
+                    radial-gradient(circle at 86% 84%, rgba(14, 165, 233, 0.10), transparent 24rem),
+                    #f8fafc;
+            }
+
+            .block-container {
+                max-width: 31rem;
+                padding-top: 14vh;
+            }
+
+            .access-brand {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 0.8rem;
+                margin-bottom: 1.4rem;
+            }
+
+            .access-brand-mark {
+                position: relative;
+                display: grid;
+                place-items: center;
+                width: 3rem;
+                height: 3rem;
+                overflow: hidden;
+                border-radius: 0.9rem;
+                color: #ffffff;
+                background: linear-gradient(145deg, #111827 10%, #1d4ed8 100%);
+                font-size: 1.5rem;
+                font-weight: 850;
+                letter-spacing: -0.08em;
+                box-shadow: 0 10px 24px rgba(29, 78, 216, 0.28);
+            }
+
+            .access-brand-mark::after {
+                content: "";
+                position: absolute;
+                right: -0.18rem;
+                bottom: -0.18rem;
+                width: 1.05rem;
+                height: 1.05rem;
+                border: 0.2rem solid rgba(255, 255, 255, 0.72);
+                border-radius: 50%;
+            }
+
+            .access-brand-copy {
+                display: flex;
+                flex-direction: column;
+                line-height: 1;
+            }
+
+            .access-brand-copy strong {
+                color: #111827;
+                font-size: 1.05rem;
+                font-weight: 850;
+                letter-spacing: 0.1em;
+            }
+
+            .access-brand-copy span {
+                margin-top: 0.3rem;
+                color: #64748b;
+                font-size: 0.65rem;
+                font-weight: 750;
+                letter-spacing: 0.1em;
+            }
+
+            .access-heading {
+                margin-bottom: 0.25rem;
+                color: #0f172a;
+                text-align: center;
+                font-size: 1.55rem;
+                font-weight: 800;
+                letter-spacing: -0.025em;
+            }
+
+            .access-subtitle {
+                margin-bottom: 1.5rem;
+                color: #64748b;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+
+            div[data-testid="stForm"] {
+                padding: 1.4rem;
+                background: rgba(255, 255, 255, 0.94);
+                border: 1px solid #e2e8f0;
+                border-radius: 1.1rem;
+                box-shadow: 0 18px 45px rgba(15, 23, 42, 0.09);
+            }
+        </style>
+        <div class="access-brand" aria-label="Rebuy Review Platform">
+            <div class="access-brand-mark" aria-hidden="true">R</div>
+            <div class="access-brand-copy">
+                <strong>REBUY</strong>
+                <span>REVIEW PLATFORM</span>
+            </div>
+        </div>
+        <div class="access-heading">Welcome back</div>
+        <div class="access-subtitle">Enter the access passcode to continue.</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    expected_passcode = _configured_passcode()
+    if not expected_passcode:
+        st.error("App access is not configured. Add APP_PASSCODE to the app's Streamlit secrets.")
+        st.stop()
+
+    with st.form("rebuy_passcode_form", clear_on_submit=True):
+        entered_passcode = st.text_input(
+            "Passcode",
+            type="password",
+            placeholder="Enter passcode",
+        )
+        submitted = st.form_submit_button("Unlock dashboard", type="primary", use_container_width=True)
+
+    if submitted:
+        if hmac.compare_digest(entered_passcode, expected_passcode):
+            st.session_state["rebuy_access_granted"] = True
+            st.session_state.pop("rebuy_passcode_error", None)
+            st.rerun()
+        else:
+            st.session_state["rebuy_passcode_error"] = True
+
+    if st.session_state.get("rebuy_passcode_error"):
+        st.error("Incorrect passcode. Please try again.")
+
+    st.stop()
 
 
 @st.cache_data(show_spinner="Reading workbook...")
@@ -3173,6 +3328,8 @@ def render_history_review_dashboard_page():
     )
 
 def main():
+    require_passcode()
+
     if "page" not in st.session_state or st.session_state.get("page") == "home":
         st.session_state["page"] = "review"
 
