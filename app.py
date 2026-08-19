@@ -1648,6 +1648,19 @@ def render_comments(data: WorkbookData, row: pd.Series, store: CommentStore):
 def render_exports(data: WorkbookData, store: CommentStore):
     st.subheader("Export / Put Comments Back Into Excel")
     comments_df = store.list_for_meeting(data.meeting_id)
+
+    descriptions_by_row = {
+        int(workbook_row["__row_number"]): clean_text(row_field(workbook_row, "description"))
+        for _, workbook_row in data.rebuys.iterrows()
+        if pd.notna(workbook_row.get("__row_number"))
+    }
+    description_position = comments_df.columns.get_loc("Product Name") + 1
+    comments_df.insert(
+        description_position,
+        "Description",
+        comments_df["Original Row Number"].map(descriptions_by_row).fillna(""),
+    )
+
     nonblank_comments = comments_df[comments_df["Finance Comment"].astype(str).str.strip() != ""] if not comments_df.empty else comments_df
 
     st.write(f"Saved Finance comments for this workbook: **{len(nonblank_comments)}**")
