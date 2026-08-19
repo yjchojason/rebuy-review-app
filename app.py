@@ -2682,7 +2682,7 @@ def inject_global_css():
             .demand-summary-row strong {
                 color: var(--rebuy-text);
                 font-size: 1.15rem;
-                font-weight: 850;
+                font-weight: 400;
                 text-align: right;
                 white-space: nowrap;
             }
