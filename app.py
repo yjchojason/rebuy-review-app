@@ -2596,6 +2596,21 @@ def inject_global_css():
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpanderDetails"] {
                 background: transparent !important;
+                border: 0 !important;
+                outline: 0 !important;
+                box-shadow: none !important;
+            }
+
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] > details {
+                overflow: hidden !important;
+                border: 0 !important;
+                border-radius: inherit !important;
+                outline: 0 !important;
+                box-shadow: none !important;
             }
 
             :is(
@@ -2606,7 +2621,9 @@ def inject_global_css():
                 min-height: 50px;
                 background: #ffffff !important;
                 color: var(--rebuy-text) !important;
-                border-bottom: 0;
+                border: 0 !important;
+                outline: 0 !important;
+                box-shadow: none !important;
             }
 
             :is(
@@ -2614,7 +2631,7 @@ def inject_global_css():
                 .st-key-past_actual_detail_panel,
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] details[open] summary {
-                border-bottom: 0;
+                border: 0 !important;
             }
 
             :is(
