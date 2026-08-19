@@ -1194,12 +1194,15 @@ def render_section_tables(row: pd.Series):
         ("POs", "Open purchase orders", fmt_num(row_field(row, "pos"))),
         ("BOs", "Backorders", fmt_num(row_field(row, "bos"))),
     ]
-    component_html = '<div class="inventory-operator">+</div>'.join(
+    component_html = "".join(
         f"""
-        <div class="inventory-component">
-            <div class="inventory-component-label">{escape(label_text)}</div>
-            <div class="inventory-component-value">{escape(value_text)}</div>
-            <div class="inventory-component-sub">{escape(sub_text)}</div>
+        <div class="inventory-tree-row">
+            <div class="inventory-tree-name">
+                <span class="inventory-tree-branch">↳</span>
+                <span>{escape(label_text)}</span>
+                <small>{escape(sub_text)}</small>
+            </div>
+            <div class="inventory-tree-value">{escape(value_text)}</div>
         </div>
         """
         for label_text, sub_text, value_text in inventory_components
@@ -1237,13 +1240,16 @@ def render_section_tables(row: pd.Series):
         f"""
         <div class="inventory-overview">
             <div class="inventory-section-label">Current North America inventory</div>
-            <div class="inventory-equation">
-                {component_html}
-                <div class="inventory-operator inventory-equals">=</div>
-                <div class="inventory-total">
-                    <div class="inventory-total-label">Total NA Inventory</div>
-                    <div class="inventory-total-value">{escape(fmt_num(row_field(row, "total_na_inv")))}</div>
-                    <div class="inventory-total-sub">Current inventory position</div>
+            <div class="inventory-tree">
+                <div class="inventory-tree-total">
+                    <div>
+                        <div class="inventory-tree-total-label">Total NA Inventory</div>
+                        <div class="inventory-tree-total-note">Current inventory position</div>
+                    </div>
+                    <div class="inventory-tree-total-value">{escape(fmt_num(row_field(row, "total_na_inv")))}</div>
+                </div>
+                <div class="inventory-tree-children">
+                    {component_html}
                 </div>
             </div>
 
@@ -2467,39 +2473,106 @@ def inject_global_css():
                 text-transform: uppercase;
             }
 
-            .inventory-equation {
-                display: grid;
-                grid-template-columns:
-                    minmax(105px, 1fr) auto minmax(105px, 1fr) auto
-                    minmax(105px, 1fr) auto minmax(105px, 1fr) auto
-                    minmax(155px, 1.2fr);
-                align-items: stretch;
-                gap: 0.45rem;
+            .inventory-tree {
+                overflow: hidden;
+                border: 1px solid #dbeafe;
+                border-radius: 14px;
+                background: #ffffff;
             }
 
-            .inventory-component,
-            .inventory-total {
+            .inventory-tree-total {
+                display: flex;
+                min-height: 72px;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                padding: 0.85rem 1rem;
+                background: #eff6ff;
+                border-bottom: 1px solid #bfdbfe;
+            }
+
+            .inventory-tree-total-label {
+                color: var(--rebuy-blue-dark);
+                font-size: 0.9rem;
+                font-weight: 850;
+            }
+
+            .inventory-tree-total-note {
+                margin-top: 0.15rem;
+                color: #64748b;
+                font-size: 0.7rem;
+            }
+
+            .inventory-tree-total-value {
+                color: var(--rebuy-blue-dark);
+                font-size: 1.6rem;
+                font-weight: 850;
+                line-height: 1;
+                white-space: nowrap;
+            }
+
+            .inventory-tree-children {
+                position: relative;
+                padding-left: 1rem;
+                background: #ffffff;
+            }
+
+            .inventory-tree-children::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 1.35rem;
+                width: 1px;
+                background: #dbeafe;
+            }
+
+            .inventory-tree-row {
+                position: relative;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                min-height: 48px;
+                align-items: center;
+                gap: 1rem;
+                margin-left: 0.8rem;
+                padding: 0.55rem 1rem 0.55rem 1.05rem;
+                border-bottom: 1px solid #eef2f7;
+            }
+
+            .inventory-tree-row:last-child {
+                border-bottom: 0;
+            }
+
+            .inventory-tree-name {
                 display: flex;
                 min-width: 0;
-                min-height: 92px;
-                flex-direction: column;
-                justify-content: center;
-                border-radius: 13px;
-                padding: 0.75rem 0.8rem;
+                align-items: baseline;
+                gap: 0.45rem;
+                color: var(--rebuy-text);
+                font-size: 0.8rem;
+                font-weight: 750;
             }
 
-            .inventory-component {
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
+            .inventory-tree-name small {
+                color: var(--rebuy-muted);
+                font-size: 0.67rem;
+                font-weight: 500;
             }
 
-            .inventory-total {
-                background: #eff6ff;
-                border: 1px solid #bfdbfe;
+            .inventory-tree-branch {
+                color: #60a5fa;
+                font-size: 0.85rem;
+                font-weight: 800;
             }
 
-            .inventory-component-label,
-            .inventory-total-label,
+            .inventory-tree-value {
+                color: var(--rebuy-text);
+                font-size: 0.95rem;
+                font-weight: 850;
+                text-align: right;
+                white-space: nowrap;
+            }
+
             .inventory-context-label,
             .lead-time-label {
                 color: var(--rebuy-muted);
@@ -2507,8 +2580,6 @@ def inject_global_css():
                 font-weight: 750;
             }
 
-            .inventory-component-value,
-            .inventory-total-value,
             .inventory-context-value {
                 margin-top: 0.2rem;
                 color: var(--rebuy-text);
@@ -2517,31 +2588,12 @@ def inject_global_css():
                 line-height: 1.1;
             }
 
-            .inventory-total-value {
-                color: var(--rebuy-blue-dark);
-                font-size: 1.55rem;
-            }
-
-            .inventory-component-sub,
-            .inventory-total-sub,
             .inventory-context-note,
             .lead-time-detail {
                 margin-top: 0.25rem;
                 color: var(--rebuy-muted);
                 font-size: 0.68rem;
                 line-height: 1.25;
-            }
-
-            .inventory-operator {
-                display: grid;
-                place-items: center;
-                color: #94a3b8;
-                font-size: 1.05rem;
-                font-weight: 800;
-            }
-
-            .inventory-equals {
-                color: var(--rebuy-blue);
             }
 
             .inventory-context-grid {
@@ -2710,18 +2762,6 @@ def inject_global_css():
 
                 .sku-meta-grid {
                     grid-template-columns: repeat(2, 1fr);
-                }
-
-                .inventory-equation {
-                    grid-template-columns: 1fr 1fr;
-                }
-
-                .inventory-equation .inventory-operator {
-                    display: none;
-                }
-
-                .inventory-total {
-                    grid-column: 1 / -1;
                 }
 
                 .inventory-context-grid {
