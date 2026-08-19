@@ -2580,9 +2580,9 @@ def inject_global_css():
             ) [data-testid="stExpander"] {
                 overflow: hidden;
                 background: transparent !important;
-                border: 1px solid #bfdbfe !important;
-                border-radius: 14px !important;
-                box-shadow: none !important;
+                border: 1px solid var(--rebuy-border) !important;
+                border-radius: 16px !important;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04) !important;
             }
 
             :is(
@@ -2603,10 +2603,18 @@ def inject_global_css():
                 .st-key-past_actual_detail_panel,
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] summary {
-                min-height: 54px;
-                background: #eff6ff !important;
-                color: var(--rebuy-blue-dark) !important;
-                border-bottom: 1px solid #bfdbfe;
+                min-height: 50px;
+                background: #ffffff !important;
+                color: var(--rebuy-text) !important;
+                border-bottom: 0;
+            }
+
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] details[open] summary {
+                border-bottom: 1px solid var(--rebuy-border);
             }
 
             :is(
@@ -2614,9 +2622,9 @@ def inject_global_css():
                 .st-key-past_actual_detail_panel,
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] summary p {
-                color: var(--rebuy-blue-dark) !important;
-                font-size: 0.9rem !important;
-                font-weight: 850 !important;
+                color: var(--rebuy-text) !important;
+                font-size: 0.86rem !important;
+                font-weight: 750 !important;
             }
 
             :is(
@@ -2624,8 +2632,8 @@ def inject_global_css():
                 .st-key-past_actual_detail_panel,
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] summary svg {
-                color: var(--rebuy-blue-dark) !important;
-                fill: var(--rebuy-blue-dark) !important;
+                color: var(--rebuy-muted) !important;
+                fill: var(--rebuy-muted) !important;
             }
 
             .st-key-demand_view_panel [data-testid="stVegaLiteChart"],
