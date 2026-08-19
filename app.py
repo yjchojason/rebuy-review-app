@@ -2624,7 +2624,7 @@ def inject_global_css():
                 .st-key-future_demand_detail_panel,
                 .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] summary {
-                min-height: 50px;
+                min-height: 66px;
                 background: #ffffff !important;
                 color: var(--rebuy-text) !important;
                 border: 0 !important;
@@ -2648,8 +2648,9 @@ def inject_global_css():
                 .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] summary p {
                 color: var(--rebuy-text) !important;
-                font-size: 0.86rem !important;
-                font-weight: 750 !important;
+                font-size: 1.35rem !important;
+                line-height: 1.15 !important;
+                font-weight: 850 !important;
             }
 
             :is(
@@ -2688,14 +2689,14 @@ def inject_global_css():
             .demand-summary-row span {
                 min-width: 0;
                 color: var(--rebuy-text);
-                font-size: 0.73rem;
+                font-size: 0.9rem;
                 font-weight: 700;
             }
 
             .demand-summary-metric strong,
             .demand-summary-row strong {
                 color: var(--rebuy-text);
-                font-size: 0.88rem;
+                font-size: 1.15rem;
                 font-weight: 850;
                 text-align: right;
                 white-space: nowrap;
@@ -2704,7 +2705,7 @@ def inject_global_css():
             .demand-summary-metric small {
                 grid-column: 1 / -1;
                 color: var(--rebuy-muted);
-                font-size: 0.63rem;
+                font-size: 0.74rem;
             }
 
             .demand-summary-section {
@@ -2719,8 +2720,8 @@ def inject_global_css():
                 grid-template-columns: minmax(0, 1fr) auto;
                 align-items: center;
                 gap: 0.75rem;
-                min-height: 34px;
-                padding: 0.42rem 0.7rem;
+                min-height: 42px;
+                padding: 0.52rem 0.75rem;
                 border-bottom: 1px solid #eef2f7;
             }
 
