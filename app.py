@@ -2648,7 +2648,7 @@ def inject_global_css():
                 .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] summary p {
                 color: var(--rebuy-text) !important;
-                font-size: 10px !important;
+                font-size: 1.35rem !important;
                 line-height: 1.15 !important;
                 font-weight: 400 !important;
             }
