@@ -1188,72 +1188,98 @@ def render_metric_cards(row: pd.Series):
 
 
 def render_section_tables(row: pd.Series):
-    left, mid, right = st.columns([1, 1, 1])
+    inventory_components = [
+        ("On Hand", "NA OH", fmt_num(row_field(row, "na_oh"))),
+        ("In Transit", "NA AIT", fmt_num(row_field(row, "na_ait"))),
+        ("POs", "Open purchase orders", fmt_num(row_field(row, "pos"))),
+        ("BOs", "Backorders", fmt_num(row_field(row, "bos"))),
+    ]
+    component_html = '<div class="inventory-operator">+</div>'.join(
+        f"""
+        <div class="inventory-component">
+            <div class="inventory-component-label">{escape(label_text)}</div>
+            <div class="inventory-component-value">{escape(value_text)}</div>
+            <div class="inventory-component-sub">{escape(sub_text)}</div>
+        </div>
+        """
+        for label_text, sub_text, value_text in inventory_components
+    )
 
-    with left:
-        st.subheader("SKU Identity")
-        st.dataframe(
-            key_value_table(
-                [
-                    ("FSC", row_field(row, "fsc")),
-                    ("Profile #", row_field(row, "profile")),
-                    ("Product", row_field(row, "full_description") or row_field(row, "description")),
-                    ("Category", row_field(row, "category")),
-                    ("Planner", row_field(row, "planner")),
-                    ("ABC Tier", row_field(row, "abc")),
-                    ("Campaign of Introduction", row_field(row, "coi")),
-                    ("Supplier", row_field(row, "supplier")),
-                    ("Country", row_field(row, "coo")),
-                    ("Std Cost", fmt_dollar(row_field(row, "std_cost"), decimals=2))
-                ]
-            ),
-            hide_index=True,
-            use_container_width=True,
-        )
+    abc_tier = clean_text(row_field(row, "abc")).upper()
+    safety_stock_applies = abc_tier in {"A", "K"}
+    safety_stock_value = (
+        fmt_num(row_field(row, "safety_stock"))
+        if safety_stock_applies
+        else "N/A"
+    )
+    safety_stock_note = (
+        f"Applied to {abc_tier}-tier inventory planning"
+        if safety_stock_applies
+        else f"Only used for A and K tiers · Current tier: {abc_tier or 'N/A'}"
+    )
 
-    with mid:
-        st.subheader("Rebuy Request")
-        st.dataframe(
-            key_value_table(
-                [
-                    ("Recommended Purchase Qty", fmt_num(row_field(row, "rebuy_qty"))),
-                    ("Purchase Dollar Amount", fmt_dollar(row_field(row, "rebuy_dollars"))),
-                    ("MOQ", fmt_num(row_field(row, "moq"))),
-                    ("MOQ Campaign Coverage", row_field(row, "moq_coverage")),
-                    ("Coverage Campaign", row_field(row, "coverage_campaign")),
-                    ("# Campaigns of Coverage", row_field(row, "coverage_camps")),
-                    ("Total NA Inv + Rebuy", fmt_num(row_field(row, "ttl_inv_plus_rebuy"))),
-                    ("Excess Units", fmt_num(row_field(row, "excess_units"))),
-                    ("Excess $", fmt_dollar(row_field(row, "excess_dollars"))),
-                    ("Rebuy Y/N/TBD", row_field(row, "rebuy_decision")),
-                ]
-            ),
-            hide_index=True,
-            use_container_width=True,
-        )
+    lead_times = [
+        ("Management LT", fmt_num(row_field(row, "mgt_lt_days")), "days"),
+        ("Transit LT", fmt_num(row_field(row, "transit_lt_days")), "days"),
+    ]
+    lead_time_html = '<div class="lead-time-arrow">→</div>'.join(
+        f"""
+        <div class="lead-time-step">
+            <div class="lead-time-label">{escape(label_text)}</div>
+            <div><strong>{escape(value_text)}</strong> <span>{escape(unit)}</span></div>
+        </div>
+        """
+        for label_text, value_text, unit in lead_times
+    )
 
-    with right:
-        st.subheader("Inventory + Lead Time")
-        st.dataframe(
-            key_value_table(
-                [
-                    ("On Hand / NA OH", fmt_num(row_field(row, "na_oh"))),
-                    ("In Transit / NA AIT", fmt_num(row_field(row, "na_ait"))),
-                    ("POs", fmt_num(row_field(row, "pos"))),
-                    ("BOs", fmt_num(row_field(row, "bos"))),
-                    ("Customer Orders", fmt_num(row_field(row, "cust_orders"))),
-                    ("Total NA Inventory", fmt_num(row_field(row, "total_na_inv"))),
-                    ("Safety Stock", fmt_num(row_field(row, "safety_stock"))),
-                    ("Stockout C without SS", fmt_campaign(row_field(row, "stockout_no_ss"))),
-                    ("Stockout C with SS", fmt_campaign(row_field(row, "stockout_with_ss"))),
-                    ("Fill-by Campaign", fmt_campaign(row_field(row, "fill_by_campaign"))),
-                    ("Mgt LT / Transit LT", f"{fmt_num(row_field(row, 'mgt_lt_days'))} / {fmt_num(row_field(row, 'transit_lt_days'))} days"),
-                    ("Grand LT", f"{fmt_num(row_field(row, 'grand_lt_days'))} days | {fmt_num(row_field(row, 'grand_lt_weeks'))} weeks | {fmt_num(row_field(row, 'grand_lt_camps'), 1)} campaigns"),
-                ]
-            ),
-            hide_index=True,
-            use_container_width=True,
-        )
+    st.subheader("Inventory Status")
+    st.markdown(
+        f"""
+        <div class="inventory-overview">
+            <div class="inventory-section-label">Current North America inventory</div>
+            <div class="inventory-equation">
+                {component_html}
+                <div class="inventory-operator inventory-equals">=</div>
+                <div class="inventory-total">
+                    <div class="inventory-total-label">Total NA Inventory</div>
+                    <div class="inventory-total-value">{escape(fmt_num(row_field(row, "total_na_inv")))}</div>
+                    <div class="inventory-total-sub">Current inventory position</div>
+                </div>
+            </div>
+
+            <div class="inventory-context-grid">
+                <div class="inventory-context-card">
+                    <div class="inventory-context-label">Customer Orders</div>
+                    <div class="inventory-context-value">{escape(fmt_num(row_field(row, "cust_orders")))}</div>
+                    <div class="inventory-context-note">
+                        Separate sales channel · Not included in the demand forecast above
+                    </div>
+                </div>
+                <div class="inventory-context-card">
+                    <div class="inventory-context-label">Safety Stock</div>
+                    <div class="inventory-context-value">{escape(safety_stock_value)}</div>
+                    <div class="inventory-context-note">{escape(safety_stock_note)}</div>
+                </div>
+                <div class="lead-time-card">
+                    <div class="inventory-context-label">Lead Time</div>
+                    <div class="lead-time-flow">
+                        {lead_time_html}
+                        <div class="lead-time-arrow">→</div>
+                        <div class="lead-time-step lead-time-total">
+                            <div class="lead-time-label">Grand LT</div>
+                            <div><strong>{escape(fmt_num(row_field(row, "grand_lt_days")))}</strong> <span>days</span></div>
+                            <div class="lead-time-detail">
+                                {escape(fmt_num(row_field(row, "grand_lt_weeks")))} weeks ·
+                                {escape(fmt_num(row_field(row, "grand_lt_camps"), 1))} campaigns
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_demand(data: WorkbookData, row: pd.Series):
@@ -2424,6 +2450,147 @@ def inject_global_css():
                 margin-top: 0.2rem;
             }
 
+            .inventory-overview {
+                background: #ffffff;
+                border: 1px solid var(--rebuy-border);
+                border-radius: 18px;
+                padding: 1.15rem;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035);
+            }
+
+            .inventory-section-label {
+                margin-bottom: 0.7rem;
+                color: var(--rebuy-muted);
+                font-size: 0.72rem;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .inventory-equation {
+                display: grid;
+                grid-template-columns:
+                    minmax(105px, 1fr) auto minmax(105px, 1fr) auto
+                    minmax(105px, 1fr) auto minmax(105px, 1fr) auto
+                    minmax(155px, 1.2fr);
+                align-items: stretch;
+                gap: 0.45rem;
+            }
+
+            .inventory-component,
+            .inventory-total {
+                display: flex;
+                min-width: 0;
+                min-height: 92px;
+                flex-direction: column;
+                justify-content: center;
+                border-radius: 13px;
+                padding: 0.75rem 0.8rem;
+            }
+
+            .inventory-component {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+            }
+
+            .inventory-total {
+                background: #eff6ff;
+                border: 1px solid #bfdbfe;
+            }
+
+            .inventory-component-label,
+            .inventory-total-label,
+            .inventory-context-label,
+            .lead-time-label {
+                color: var(--rebuy-muted);
+                font-size: 0.72rem;
+                font-weight: 750;
+            }
+
+            .inventory-component-value,
+            .inventory-total-value,
+            .inventory-context-value {
+                margin-top: 0.2rem;
+                color: var(--rebuy-text);
+                font-size: 1.35rem;
+                font-weight: 850;
+                line-height: 1.1;
+            }
+
+            .inventory-total-value {
+                color: var(--rebuy-blue-dark);
+                font-size: 1.55rem;
+            }
+
+            .inventory-component-sub,
+            .inventory-total-sub,
+            .inventory-context-note,
+            .lead-time-detail {
+                margin-top: 0.25rem;
+                color: var(--rebuy-muted);
+                font-size: 0.68rem;
+                line-height: 1.25;
+            }
+
+            .inventory-operator {
+                display: grid;
+                place-items: center;
+                color: #94a3b8;
+                font-size: 1.05rem;
+                font-weight: 800;
+            }
+
+            .inventory-equals {
+                color: var(--rebuy-blue);
+            }
+
+            .inventory-context-grid {
+                display: grid;
+                grid-template-columns: minmax(150px, 0.75fr) minmax(170px, 0.9fr) minmax(360px, 2fr);
+                gap: 0.7rem;
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid var(--rebuy-border);
+            }
+
+            .inventory-context-card,
+            .lead-time-card {
+                border-radius: 13px;
+                padding: 0.8rem 0.9rem;
+                background: #ffffff;
+                border: 1px solid var(--rebuy-border);
+            }
+
+            .lead-time-flow {
+                display: grid;
+                grid-template-columns: 1fr auto 1fr auto 1.25fr;
+                align-items: center;
+                gap: 0.5rem;
+                margin-top: 0.45rem;
+            }
+
+            .lead-time-step strong {
+                color: var(--rebuy-text);
+                font-size: 1.05rem;
+                font-weight: 850;
+            }
+
+            .lead-time-step span {
+                color: var(--rebuy-muted);
+                font-size: 0.7rem;
+            }
+
+            .lead-time-arrow {
+                color: #94a3b8;
+                font-size: 1rem;
+                font-weight: 800;
+            }
+
+            .lead-time-total {
+                border-left: 2px solid #bfdbfe;
+                padding-left: 0.7rem;
+            }
+
             .promo-strip {
                 display: flex;
                 flex-wrap: wrap;
@@ -2543,6 +2710,26 @@ def inject_global_css():
 
                 .sku-meta-grid {
                     grid-template-columns: repeat(2, 1fr);
+                }
+
+                .inventory-equation {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .inventory-equation .inventory-operator {
+                    display: none;
+                }
+
+                .inventory-total {
+                    grid-column: 1 / -1;
+                }
+
+                .inventory-context-grid {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .lead-time-card {
+                    grid-column: 1 / -1;
                 }
             }
         </style>
