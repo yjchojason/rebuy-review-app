@@ -2263,7 +2263,7 @@ def inject_global_css():
                 min-width: var(--sku-side-button-width) !important;
                 padding: 0 0.35rem !important;
                 border-radius: 16px !important;
-                border: 1px solid var(--rebuy-border) !important;
+                border: 0 !important;
                 background: #ffffff !important;
                 box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035) !important;
                 white-space: nowrap !important;
@@ -2614,7 +2614,7 @@ def inject_global_css():
                 .st-key-past_actual_detail_panel,
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] details[open] summary {
-                border-bottom: 1px solid var(--rebuy-border);
+                border-bottom: 0;
             }
 
             :is(
