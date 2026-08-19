@@ -2579,7 +2579,7 @@ def inject_global_css():
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] {
                 overflow: hidden;
-                background: transparent !important;
+                background: #ffffff !important;
                 border: 1px solid var(--rebuy-border) !important;
                 border-radius: 18px !important;
                 box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04) !important;
@@ -2595,7 +2595,7 @@ def inject_global_css():
                 .st-key-past_actual_detail_panel,
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpanderDetails"] {
-                background: transparent !important;
+                background: #ffffff !important;
                 border: 0 !important;
                 outline: 0 !important;
                 box-shadow: none !important;
@@ -2607,6 +2607,7 @@ def inject_global_css():
                 .st-key-future_demand_detail_panel
             ) [data-testid="stExpander"] > details {
                 overflow: hidden !important;
+                background: #ffffff !important;
                 border: 0 !important;
                 border-radius: inherit !important;
                 outline: 0 !important;
