@@ -1235,11 +1235,8 @@ def render_section_tables(row: pd.Series):
         for label_text, value_text, unit in lead_times
     )
 
-    st.subheader("Inventory Status")
-    st.markdown(
-        f"""
-        <div class="inventory-overview">
-            <div class="inventory-section-label">Current North America inventory</div>
+    inventory_status_html = f"""
+        <div class="inventory-status-layout">
             <div class="inventory-tree">
                 <div class="inventory-tree-total">
                     <div>
@@ -1252,7 +1249,6 @@ def render_section_tables(row: pd.Series):
                     {component_html}
                 </div>
             </div>
-
             <div class="inventory-context-grid">
                 <div class="inventory-context-card">
                     <div class="inventory-context-label">Customer Orders</div>
@@ -1283,7 +1279,9 @@ def render_section_tables(row: pd.Series):
                 </div>
             </div>
         </div>
-        """,
+    """
+    st.markdown(
+        inventory_status_html.replace("\n", ""),
         unsafe_allow_html=True,
     )
 
@@ -2454,23 +2452,6 @@ def inject_global_css():
                 color: var(--rebuy-muted);
                 font-size: 0.75rem;
                 margin-top: 0.2rem;
-            }
-
-            .inventory-overview {
-                background: #ffffff;
-                border: 1px solid var(--rebuy-border);
-                border-radius: 18px;
-                padding: 1.15rem;
-                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035);
-            }
-
-            .inventory-section-label {
-                margin-bottom: 0.7rem;
-                color: var(--rebuy-muted);
-                font-size: 0.72rem;
-                font-weight: 800;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
             }
 
             .inventory-tree {
