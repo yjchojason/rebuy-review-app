@@ -1198,7 +1198,6 @@ def render_section_tables(row: pd.Series):
         f"""
         <div class="inventory-tree-row">
             <div class="inventory-tree-name">
-                <span class="inventory-tree-branch">↳</span>
                 <span>{escape(label_text)}</span>
                 <small>{escape(sub_text)}</small>
             </div>
@@ -1216,7 +1215,6 @@ def render_section_tables(row: pd.Series):
         f"""
         <div class="inventory-tree-row">
             <div class="inventory-tree-name">
-                <span class="inventory-tree-branch">↳</span>
                 <span>{escape(label_text)}</span>
             </div>
             <div class="inventory-tree-value">{escape(value_text)} days</div>
@@ -2465,7 +2463,7 @@ def inject_global_css():
 
             .inventory-tree-total-label {
                 color: var(--rebuy-blue-dark);
-                font-size: 0.9rem;
+                font-size: 1rem;
                 font-weight: 850;
             }
 
@@ -2484,19 +2482,7 @@ def inject_global_css():
             }
 
             .inventory-tree-children {
-                position: relative;
-                padding-left: 1rem;
                 background: #ffffff;
-            }
-
-            .inventory-tree-children::before {
-                content: "";
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                left: 1.35rem;
-                width: 1px;
-                background: #dbeafe;
             }
 
             .inventory-tree-row {
@@ -2506,8 +2492,7 @@ def inject_global_css():
                 min-height: 48px;
                 align-items: center;
                 gap: 1rem;
-                margin-left: 0.8rem;
-                padding: 0.55rem 1rem 0.55rem 1.05rem;
+                padding: 0.55rem 1rem;
                 border-bottom: 1px solid #eef2f7;
             }
 
