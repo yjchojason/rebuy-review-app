@@ -3141,6 +3141,7 @@ def render_demand(data: WorkbookData, row: pd.Series):
     qualifying_future_values = displayed_future_values[displayed_future_values > 1]
 
     total_past_actual_sales = float(displayed_actual_values.sum())
+    total_future_demand = float(displayed_future_values.sum())
     average_actual_sales = (
         float(qualifying_actual_values.mean())
         if not qualifying_actual_values.empty
@@ -3194,21 +3195,24 @@ def render_demand(data: WorkbookData, row: pd.Series):
         with st.container(key="demand_inventory_summary_panel"):
             with st.expander("Demand & Inventory Summary", expanded=False):
                 summary_html = f"""
-                    <div class="demand-summary-metrics">
-                        <div class="demand-summary-metric">
+                    <div class="demand-summary-section">
+                        <div class="demand-summary-row demand-summary-emphasis">
                             <span>Total Past Actual Sales</span>
                             <strong>{escape(fmt_num(total_past_actual_sales))}</strong>
-                            <small>Displayed past campaigns</small>
                         </div>
-                        <div class="demand-summary-metric">
-                            <span>Avg. Actual / Campaign</span>
+                        <div class="demand-summary-row demand-summary-child">
+                            <span>Avg. Actual Sales / Campaign</span>
                             <strong>{escape(fmt_num(average_actual_sales, 1))}</strong>
-                            <small>{len(qualifying_actual_values)} campaign(s) over 1 unit</small>
                         </div>
-                        <div class="demand-summary-metric">
-                            <span>Avg. Future Demand / Campaign</span>
+                    </div>
+                    <div class="demand-summary-section">
+                        <div class="demand-summary-row demand-summary-emphasis">
+                            <span>Total Future Demand</span>
+                            <strong>{escape(fmt_num(total_future_demand))}</strong>
+                        </div>
+                        <div class="demand-summary-row demand-summary-child">
+                            <span>Avg. Demand / Campaign</span>
                             <strong>{escape(fmt_num(average_future_demand, 1))}</strong>
-                            <small>{len(qualifying_future_values)} campaign(s) over 1 unit</small>
                         </div>
                     </div>
                     <div class="demand-summary-section">
