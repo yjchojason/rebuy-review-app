@@ -3549,8 +3549,6 @@ def render_review_dashboard(
 
     render_demand(data, row)
     st.divider()
-    render_section_tables(row)
-    st.divider()
     render_comments(data, row, store, total_skus=len(filtered))
     st.divider()
     render_exports(data, store)
