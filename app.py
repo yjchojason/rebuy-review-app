@@ -1633,7 +1633,12 @@ def render_exports(data: WorkbookData, store: CommentStore):
 
     st.write(f"Saved Finance comments for this workbook: **{len(nonblank_comments)}**")
     if not comments_df.empty:
-        st.dataframe(comments_df, hide_index=True, use_container_width=True)
+        st.dataframe(
+            comments_df,
+            hide_index=True,
+            use_container_width=True,
+            height=340,
+        )
         st.download_button(
             "Download comments CSV",
             data=comments_df.to_csv(index=False).encode("utf-8-sig"),
@@ -2154,7 +2159,7 @@ def inject_global_css():
             }
 
             .sku-planner-comment {
-                color: var(--rebuy-muted);
+                color: var(--rebuy-blue);
                 font-size: 0.82rem;
                 margin-top: 0.75rem;
                 line-height: 1.25;
@@ -2640,11 +2645,21 @@ def render_kpi_strip(items: list[tuple[str, str, str]]):
 
 
 def render_metric_cards(row: pd.Series):
+    coverage_count = fmt_num(row_field(row, "coverage_camps"))
+    coverage_campaign = fmt_campaign(row_field(row, "coverage_campaign"))
+    coverage_value = coverage_count
+    if coverage_campaign != "—":
+        coverage_value = f"{coverage_count} (~{coverage_campaign})"
+
     items = [
         ("MOQ", fmt_num(row_field(row, "moq")), "Units"),
         ("Rebuy Qty", fmt_num(row_field(row, "rebuy_qty")), "Units"),
-        ("Rebuy $", fmt_dollar(row_field(row, "rebuy_dollars")), "Est. cost"),
-        ("Campaign Coverage", fmt_num(row_field(row, "coverage_camps")), "Campaigns"),
+        (
+            "Rebuy $",
+            fmt_dollar(row_field(row, "rebuy_dollars")),
+            f"Std Cost = {fmt_dollar(row_field(row, 'std_cost'), decimals=2)}",
+        ),
+        ("Campaign Coverage", coverage_value, "Campaigns"),
         ("Stockout C with SS", fmt_campaign(row_field(row, "stockout_with_ss")), "Campaign"),
         ("Stockout C without SS", fmt_campaign(row_field(row, "stockout_no_ss")), "Campaign"),
         ("Fill-by Campaign", fmt_campaign(row_field(row, "fill_by_campaign")), "Campaign"),
@@ -2839,8 +2854,17 @@ def render_demand(data: WorkbookData, row: pd.Series):
                 )
 
 
-def render_comments(data: WorkbookData, row: pd.Series, store: CommentStore):
+def render_comments(
+    data: WorkbookData,
+    row: pd.Series,
+    store: CommentStore,
+    total_skus: int,
+):
     st.subheader("Finance Recommendations")
+
+    save_notice = st.session_state.pop("comment_save_notice", "")
+    if save_notice:
+        st.success(save_notice)
 
     row_number = int(row["__row_number"])
     fsc = clean_text(row_field(row, "fsc"))
@@ -2884,7 +2908,12 @@ def render_comments(data: WorkbookData, row: pd.Series, store: CommentStore):
             product_name=product,
             finance_comment=comment,
         )
-        st.success("Comment saved.")
+        st.session_state["comment_save_notice"] = f"Comment saved for FSC {fsc or '—'}."
+        if st.session_state["current_pos"] < total_skus - 1:
+            st.session_state["current_pos"] += 1
+            # Let the full-width SKU Jump widget initialize to the new row
+            # instead of restoring its previous selection on the rerun.
+            st.session_state.pop(f"sku_jump_select_{data.meeting_id}", None)
         st.rerun()
 
     if c2.button("Clear this comment", use_container_width=True):
@@ -3122,17 +3151,12 @@ def render_review_dashboard(
     st.divider()
     render_section_tables(row)
     st.divider()
-    render_comments(data, row, store)
+    render_comments(data, row, store, total_skus=len(filtered))
     st.divider()
     render_exports(data, store)
 
     labels_for_select = [make_sku_label(filtered.iloc[i]) for i in range(len(filtered))]
-    nav_left, nav_mid, nav_right = st.columns([1, 3, 1])
-    if nav_left.button("← Prev. SKU", use_container_width=True, disabled=st.session_state["current_pos"] <= 0):
-        st.session_state["current_pos"] -= 1
-        st.rerun()
-
-    selected_label = nav_mid.selectbox(
+    selected_label = st.selectbox(
         "SKU Jump",
         labels_for_select,
         index=st.session_state["current_pos"],
@@ -3141,10 +3165,6 @@ def render_review_dashboard(
     selected_pos = labels_for_select.index(selected_label)
     if selected_pos != st.session_state["current_pos"]:
         st.session_state["current_pos"] = selected_pos
-        st.rerun()
-
-    if nav_right.button("Next SKU →", use_container_width=True, disabled=st.session_state["current_pos"] >= len(filtered) - 1):
-        st.session_state["current_pos"] += 1
         st.rerun()
 
     with st.expander("Workbook structure detected"):

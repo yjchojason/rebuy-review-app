@@ -30,10 +30,15 @@ class CommentStore:
         self._init_db()
 
     def _connect(self):
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30)
+        conn.execute("PRAGMA busy_timeout = 30000")
+        return conn
 
     def _init_db(self) -> None:
         with self._connect() as conn:
+            # WAL lets readers and the expected small number of comment writers
+            # work concurrently without losing a save when the database is busy.
+            conn.execute("PRAGMA journal_mode = WAL")
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS finance_comments (
