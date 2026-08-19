@@ -1208,31 +1208,21 @@ def render_section_tables(row: pd.Series):
         for label_text, sub_text, value_text in inventory_components
     )
 
-    abc_tier = clean_text(row_field(row, "abc")).upper()
-    safety_stock_applies = abc_tier in {"A", "K"}
-    safety_stock_value = (
-        fmt_num(row_field(row, "safety_stock"))
-        if safety_stock_applies
-        else "N/A"
-    )
-    safety_stock_note = (
-        f"Applied to {abc_tier}-tier inventory planning"
-        if safety_stock_applies
-        else f"Only used for A and K tiers · Current tier: {abc_tier or 'N/A'}"
-    )
-
-    lead_times = [
-        ("Management LT", fmt_num(row_field(row, "mgt_lt_days")), "days"),
-        ("Transit LT", fmt_num(row_field(row, "transit_lt_days")), "days"),
+    lead_time_components = [
+        ("Management LT", fmt_num(row_field(row, "mgt_lt_days"))),
+        ("Transit LT", fmt_num(row_field(row, "transit_lt_days"))),
     ]
-    lead_time_html = '<div class="lead-time-arrow">→</div>'.join(
+    lead_time_component_html = "".join(
         f"""
-        <div class="lead-time-step">
-            <div class="lead-time-label">{escape(label_text)}</div>
-            <div><strong>{escape(value_text)}</strong> <span>{escape(unit)}</span></div>
+        <div class="inventory-tree-row">
+            <div class="inventory-tree-name">
+                <span class="inventory-tree-branch">↳</span>
+                <span>{escape(label_text)}</span>
+            </div>
+            <div class="inventory-tree-value">{escape(value_text)} days</div>
         </div>
         """
-        for label_text, value_text, unit in lead_times
+        for label_text, value_text in lead_time_components
     )
 
     inventory_status_html = f"""
@@ -1249,33 +1239,34 @@ def render_section_tables(row: pd.Series):
                     {component_html}
                 </div>
             </div>
-            <div class="inventory-context-grid">
-                <div class="inventory-context-card">
-                    <div class="inventory-context-label">Customer Orders</div>
-                    <div class="inventory-context-value">{escape(fmt_num(row_field(row, "cust_orders")))}</div>
-                    <div class="inventory-context-note">
-                        Separate sales channel · Not included in the demand forecast above
+            <div class="inventory-tree inventory-secondary-tree">
+                <div class="inventory-tree-total">
+                    <div>
+                        <div class="inventory-tree-total-label">Customer Orders</div>
+                        <div class="inventory-tree-total-note">Separate sales channel</div>
                     </div>
+                    <div class="inventory-tree-total-value">{escape(fmt_num(row_field(row, "cust_orders")))}</div>
                 </div>
-                <div class="inventory-context-card">
-                    <div class="inventory-context-label">Safety Stock</div>
-                    <div class="inventory-context-value">{escape(safety_stock_value)}</div>
-                    <div class="inventory-context-note">{escape(safety_stock_note)}</div>
+                <div class="inventory-tree-context">
+                    Separate sales channel · Not included in the demand forecast above
                 </div>
-                <div class="lead-time-card">
-                    <div class="inventory-context-label">Lead Time</div>
-                    <div class="lead-time-flow">
-                        {lead_time_html}
-                        <div class="lead-time-arrow">→</div>
-                        <div class="lead-time-step lead-time-total">
-                            <div class="lead-time-label">Grand LT</div>
-                            <div><strong>{escape(fmt_num(row_field(row, "grand_lt_days")))}</strong> <span>days</span></div>
-                            <div class="lead-time-detail">
-                                {escape(fmt_num(row_field(row, "grand_lt_weeks")))} weeks ·
-                                {escape(fmt_num(row_field(row, "grand_lt_camps"), 1))} campaigns
-                            </div>
+            </div>
+            <div class="inventory-tree inventory-secondary-tree">
+                <div class="inventory-tree-total">
+                    <div>
+                        <div class="inventory-tree-total-label">Grand Lead Time</div>
+                        <div class="inventory-tree-total-note">
+                            {escape(fmt_num(row_field(row, "grand_lt_weeks")))} weeks ·
+                            {escape(fmt_num(row_field(row, "grand_lt_camps"), 1))} campaigns
                         </div>
                     </div>
+                    <div class="inventory-tree-total-value">
+                        {escape(fmt_num(row_field(row, "grand_lt_days")))}
+                        <span class="inventory-tree-total-unit">days</span>
+                    </div>
+                </div>
+                <div class="inventory-tree-children">
+                    {lead_time_component_html}
                 </div>
             </div>
         </div>
@@ -2554,74 +2545,94 @@ def inject_global_css():
                 white-space: nowrap;
             }
 
-            .inventory-context-label,
-            .lead-time-label {
-                color: var(--rebuy-muted);
-                font-size: 0.72rem;
-                font-weight: 750;
-            }
-
-            .inventory-context-value {
-                margin-top: 0.2rem;
-                color: var(--rebuy-text);
-                font-size: 1.35rem;
-                font-weight: 850;
-                line-height: 1.1;
-            }
-
-            .inventory-context-note,
-            .lead-time-detail {
-                margin-top: 0.25rem;
-                color: var(--rebuy-muted);
-                font-size: 0.68rem;
-                line-height: 1.25;
-            }
-
-            .inventory-context-grid {
+            .inventory-status-layout {
                 display: grid;
-                grid-template-columns: minmax(150px, 0.75fr) minmax(170px, 0.9fr) minmax(360px, 2fr);
-                gap: 0.7rem;
-                margin-top: 0.75rem;
-                padding-top: 0.75rem;
-                border-top: 1px solid var(--rebuy-border);
+                grid-template-columns: minmax(340px, 1.4fr) minmax(190px, 0.75fr) minmax(330px, 1.2fr);
+                align-items: start;
+                gap: 0.75rem;
             }
 
-            .inventory-context-card,
-            .lead-time-card {
-                border-radius: 13px;
-                padding: 0.8rem 0.9rem;
-                background: #ffffff;
-                border: 1px solid var(--rebuy-border);
+            .inventory-secondary-tree {
+                align-self: start;
             }
 
-            .lead-time-flow {
-                display: grid;
-                grid-template-columns: 1fr auto 1fr auto 1.25fr;
+            .inventory-tree-context {
+                min-height: 58px;
+                display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                margin-top: 0.45rem;
-            }
-
-            .lead-time-step strong {
-                color: var(--rebuy-text);
-                font-size: 1.05rem;
-                font-weight: 850;
-            }
-
-            .lead-time-step span {
+                padding: 0.75rem 1rem;
                 color: var(--rebuy-muted);
                 font-size: 0.7rem;
+                line-height: 1.35;
+                background: #ffffff;
             }
 
-            .lead-time-arrow {
-                color: #94a3b8;
-                font-size: 1rem;
-                font-weight: 800;
+            .inventory-tree-total-unit {
+                color: #64748b;
+                font-size: 0.68rem;
+                font-weight: 650;
             }
 
-            .lead-time-total {
-                border-left: 2px solid #bfdbfe;
-                padding-left: 0.7rem;
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] {
+                overflow: hidden;
+                background: transparent !important;
+                border: 1px solid #bfdbfe !important;
+                border-radius: 14px !important;
+                box-shadow: none !important;
+            }
+
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] details,
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpanderDetails"] {
+                background: transparent !important;
+            }
+
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] summary {
+                min-height: 54px;
+                background: #eff6ff !important;
+                color: var(--rebuy-blue-dark) !important;
+                border-bottom: 1px solid #bfdbfe;
+            }
+
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] summary p {
+                color: var(--rebuy-blue-dark) !important;
+                font-size: 0.9rem !important;
+                font-weight: 850 !important;
+            }
+
+            :is(
+                .st-key-demand_view_panel,
+                .st-key-past_actual_detail_panel,
+                .st-key-future_demand_detail_panel
+            ) [data-testid="stExpander"] summary svg {
+                color: var(--rebuy-blue-dark) !important;
+                fill: var(--rebuy-blue-dark) !important;
+            }
+
+            .st-key-demand_view_panel [data-testid="stVegaLiteChart"],
+            .st-key-demand_view_panel [data-testid="stVegaLiteChart"] > div {
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
             }
 
             .promo-strip {
@@ -2745,12 +2756,8 @@ def inject_global_css():
                     grid-template-columns: repeat(2, 1fr);
                 }
 
-                .inventory-context-grid {
-                    grid-template-columns: 1fr 1fr;
-                }
-
-                .lead-time-card {
-                    grid-column: 1 / -1;
+                .inventory-status-layout {
+                    grid-template-columns: 1fr;
                 }
             }
         </style>
@@ -2858,6 +2865,10 @@ def render_metric_cards(row: pd.Series):
     coverage_value = coverage_count
     if coverage_campaign != "—":
         coverage_value = f"{coverage_count} (~{coverage_campaign})"
+    safety_stock_units = fmt_num(row_field(row, "safety_stock"))
+    if safety_stock_units == "—":
+        safety_stock_units = "0"
+    safety_stock_text = f"SS = {safety_stock_units} units"
 
     items = [
         ("MOQ", fmt_num(row_field(row, "moq")), "Units"),
@@ -2868,8 +2879,8 @@ def render_metric_cards(row: pd.Series):
             f"Std Cost = {fmt_dollar(row_field(row, 'std_cost'), decimals=2)}",
         ),
         ("Campaign Coverage", coverage_value, "Campaigns"),
-        ("Stockout C with SS", fmt_campaign(row_field(row, "stockout_with_ss")), "Campaign"),
-        ("Stockout C without SS", fmt_campaign(row_field(row, "stockout_no_ss")), "Campaign"),
+        ("Stockout C with SS", fmt_campaign(row_field(row, "stockout_with_ss")), safety_stock_text),
+        ("Stockout C without SS", fmt_campaign(row_field(row, "stockout_no_ss")), safety_stock_text),
         ("Fill-by Campaign", fmt_campaign(row_field(row, "fill_by_campaign")), "Campaign"),
     ]
     render_kpi_strip(items)
@@ -2951,8 +2962,9 @@ def render_demand(data: WorkbookData, row: pd.Series):
             full_campaign_axis.append(camp)
 
     if not full_campaign_axis:
-        with st.expander("Demand View", expanded=True):
-            st.warning("No campaign columns were detected for actual sales or future demand.")
+        with st.container(key="demand_view_panel"):
+            with st.expander("Demand View", expanded=True):
+                st.warning("No campaign columns were detected for actual sales or future demand.")
         return
 
     calendar_lookup = getattr(data, "calendar_map", {}) or {}
@@ -3016,50 +3028,52 @@ def render_demand(data: WorkbookData, row: pd.Series):
                 alt.Tooltip("Quantity:Q", title="Units", format=",.0f"),
             ],
         )
-        .properties(height=330)
+        .properties(height=330, background="transparent")
         .configure_view(stroke=None)
         .configure_axis(gridColor="#edf2f7", domainColor="#cbd5e1")
     )
 
-    with st.expander("Demand View", expanded=True):
-        with st.container(border=True):
+    with st.container(key="demand_view_panel"):
+        with st.expander("Demand View", expanded=True):
             st.altair_chart(chart, use_container_width=True)
 
     actual_col, future_col = st.columns(2)
     with actual_col:
-        with st.expander("Past Actual Sales Detail", expanded=False):
-            if actual_df.empty:
-                st.warning("No matching ACTUAL SALES row was found for this FSC or its CM-related FSCs.")
-            else:
-                actual_table = actual_df.copy()
-                actual_table["Sales Qty"] = pd.to_numeric(actual_table["Sales Qty"], errors="coerce").fillna(0)
-                actual_table = actual_table.groupby("Campaign", as_index=False)["Sales Qty"].sum()
-                actual_table["Campaign"] = actual_table["Campaign"].astype(str)
-                actual_table["Campaign Sort"] = actual_table["Campaign"].apply(lambda x: pd.to_numeric(x, errors="coerce"))
-                actual_table = actual_table.sort_values("Campaign Sort")[["Campaign", "Sales Qty"]]
-                st.dataframe(
-                    actual_table,
-                    hide_index=True,
-                    use_container_width=True,
-                    column_config={"Sales Qty": st.column_config.NumberColumn("Sales Qty", format="%d")},
-                )
+        with st.container(key="past_actual_detail_panel"):
+            with st.expander("Past Actual Sales Detail", expanded=False):
+                if actual_df.empty:
+                    st.warning("No matching ACTUAL SALES row was found for this FSC or its CM-related FSCs.")
+                else:
+                    actual_table = actual_df.copy()
+                    actual_table["Sales Qty"] = pd.to_numeric(actual_table["Sales Qty"], errors="coerce").fillna(0)
+                    actual_table = actual_table.groupby("Campaign", as_index=False)["Sales Qty"].sum()
+                    actual_table["Campaign"] = actual_table["Campaign"].astype(str)
+                    actual_table["Campaign Sort"] = actual_table["Campaign"].apply(lambda x: pd.to_numeric(x, errors="coerce"))
+                    actual_table = actual_table.sort_values("Campaign Sort")[["Campaign", "Sales Qty"]]
+                    st.dataframe(
+                        actual_table,
+                        hide_index=True,
+                        use_container_width=True,
+                        column_config={"Sales Qty": st.column_config.NumberColumn("Sales Qty", format="%d")},
+                    )
 
     with future_col:
-        with st.expander("Future Demand Detail", expanded=False):
-            if future_df.empty:
-                st.info("No future campaign demand columns were detected in REBUYS.")
-            else:
-                future_table = future_df.copy()
-                future_table["Future Demand"] = pd.to_numeric(future_table["Future Demand"], errors="coerce").fillna(0)
-                future_table["Campaign"] = future_table["Campaign"].astype(str)
-                future_table["Campaign Sort"] = future_table["Campaign"].apply(lambda x: pd.to_numeric(x, errors="coerce"))
-                future_table = future_table.sort_values("Campaign Sort")[["Campaign", "Future Demand"]]
-                st.dataframe(
-                    future_table,
-                    hide_index=True,
-                    use_container_width=True,
-                    column_config={"Future Demand": st.column_config.NumberColumn("Future Demand", format="%d")},
-                )
+        with st.container(key="future_demand_detail_panel"):
+            with st.expander("Future Demand Detail", expanded=False):
+                if future_df.empty:
+                    st.info("No future campaign demand columns were detected in REBUYS.")
+                else:
+                    future_table = future_df.copy()
+                    future_table["Future Demand"] = pd.to_numeric(future_table["Future Demand"], errors="coerce").fillna(0)
+                    future_table["Campaign"] = future_table["Campaign"].astype(str)
+                    future_table["Campaign Sort"] = future_table["Campaign"].apply(lambda x: pd.to_numeric(x, errors="coerce"))
+                    future_table = future_table.sort_values("Campaign Sort")[["Campaign", "Future Demand"]]
+                    st.dataframe(
+                        future_table,
+                        hide_index=True,
+                        use_container_width=True,
+                        column_config={"Future Demand": st.column_config.NumberColumn("Future Demand", format="%d")},
+                    )
 
 
 def render_comments(
