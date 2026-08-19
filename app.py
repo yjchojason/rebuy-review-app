@@ -2263,7 +2263,7 @@ def inject_global_css():
                 min-width: var(--sku-side-button-width) !important;
                 padding: 0 0.35rem !important;
                 border-radius: 16px !important;
-                border: 0 !important;
+                border: 1px solid var(--rebuy-border) !important;
                 background: #ffffff !important;
                 box-shadow: 0 8px 24px rgba(15, 23, 42, 0.035) !important;
                 white-space: nowrap !important;
@@ -2581,7 +2581,7 @@ def inject_global_css():
                 overflow: hidden;
                 background: transparent !important;
                 border: 1px solid var(--rebuy-border) !important;
-                border-radius: 16px !important;
+                border-radius: 18px !important;
                 box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04) !important;
             }
 
