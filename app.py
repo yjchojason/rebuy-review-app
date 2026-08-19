@@ -2576,7 +2576,8 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] {
                 overflow: hidden;
                 background: #ffffff !important;
@@ -2588,12 +2589,14 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] details,
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpanderDetails"] {
                 background: #ffffff !important;
                 border: 0 !important;
@@ -2604,7 +2607,8 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] > details {
                 overflow: hidden !important;
                 background: #ffffff !important;
@@ -2617,7 +2621,8 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] summary {
                 min-height: 50px;
                 background: #ffffff !important;
@@ -2630,7 +2635,8 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] details[open] summary {
                 border: 0 !important;
             }
@@ -2638,7 +2644,8 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] summary p {
                 color: var(--rebuy-text) !important;
                 font-size: 0.86rem !important;
@@ -2648,7 +2655,8 @@ def inject_global_css():
             :is(
                 .st-key-demand_view_panel,
                 .st-key-past_actual_detail_panel,
-                .st-key-future_demand_detail_panel
+                .st-key-future_demand_detail_panel,
+                .st-key-demand_inventory_summary_panel
             ) [data-testid="stExpander"] summary svg {
                 color: var(--rebuy-muted) !important;
                 fill: var(--rebuy-muted) !important;
@@ -2659,6 +2667,78 @@ def inject_global_css():
                 background: transparent !important;
                 border: 0 !important;
                 box-shadow: none !important;
+            }
+
+            .demand-summary-metrics {
+                display: grid;
+                gap: 0.5rem;
+            }
+
+            .demand-summary-metric {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 0.2rem 0.75rem;
+                padding: 0.6rem 0.7rem;
+                background: #f8fafc;
+                border-radius: 10px;
+            }
+
+            .demand-summary-metric span,
+            .demand-summary-row span {
+                min-width: 0;
+                color: var(--rebuy-text);
+                font-size: 0.73rem;
+                font-weight: 700;
+            }
+
+            .demand-summary-metric strong,
+            .demand-summary-row strong {
+                color: var(--rebuy-text);
+                font-size: 0.88rem;
+                font-weight: 850;
+                text-align: right;
+                white-space: nowrap;
+            }
+
+            .demand-summary-metric small {
+                grid-column: 1 / -1;
+                color: var(--rebuy-muted);
+                font-size: 0.63rem;
+            }
+
+            .demand-summary-section {
+                margin-top: 0.65rem;
+                overflow: hidden;
+                border: 1px solid var(--rebuy-border);
+                border-radius: 10px;
+            }
+
+            .demand-summary-row {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 0.75rem;
+                min-height: 34px;
+                padding: 0.42rem 0.7rem;
+                border-bottom: 1px solid #eef2f7;
+            }
+
+            .demand-summary-row:last-child {
+                border-bottom: 0;
+            }
+
+            .demand-summary-emphasis {
+                background: #f8fafc;
+            }
+
+            .demand-summary-child {
+                padding-left: 1rem;
+            }
+
+            .demand-summary-child span {
+                color: var(--rebuy-muted);
+                font-weight: 600;
             }
 
             .promo-strip {
@@ -3063,7 +3143,30 @@ def render_demand(data: WorkbookData, row: pd.Series):
         with st.expander("Demand View", expanded=True):
             st.altair_chart(chart, use_container_width=True)
 
-    actual_col, future_col = st.columns(2)
+    displayed_actual_values = pd.to_numeric(
+        actual_chart.loc[actual_chart["Campaign"].isin(past_axis), "Quantity"],
+        errors="coerce",
+    ).fillna(0)
+    displayed_future_values = pd.to_numeric(
+        future_chart.loc[future_chart["Campaign"].isin(future_axis), "Quantity"],
+        errors="coerce",
+    ).fillna(0)
+    qualifying_actual_values = displayed_actual_values[displayed_actual_values > 1]
+    qualifying_future_values = displayed_future_values[displayed_future_values > 1]
+
+    total_past_actual_sales = float(displayed_actual_values.sum())
+    average_actual_sales = (
+        float(qualifying_actual_values.mean())
+        if not qualifying_actual_values.empty
+        else 0.0
+    )
+    average_future_demand = (
+        float(qualifying_future_values.mean())
+        if not qualifying_future_values.empty
+        else 0.0
+    )
+
+    actual_col, future_col, summary_col = st.columns(3)
     with actual_col:
         with st.container(key="past_actual_detail_panel"):
             with st.expander("Past Actual Sales Detail", expanded=False):
@@ -3100,6 +3203,61 @@ def render_demand(data: WorkbookData, row: pd.Series):
                         use_container_width=True,
                         column_config={"Future Demand": st.column_config.NumberColumn("Future Demand", format="%d")},
                     )
+
+    with summary_col:
+        with st.container(key="demand_inventory_summary_panel"):
+            with st.expander("Demand & Inventory Summary", expanded=False):
+                summary_html = f"""
+                    <div class="demand-summary-metrics">
+                        <div class="demand-summary-metric">
+                            <span>Total Past Actual Sales</span>
+                            <strong>{escape(fmt_num(total_past_actual_sales))}</strong>
+                            <small>Displayed past campaigns</small>
+                        </div>
+                        <div class="demand-summary-metric">
+                            <span>Avg. Actual / Campaign</span>
+                            <strong>{escape(fmt_num(average_actual_sales, 1))}</strong>
+                            <small>{len(qualifying_actual_values)} campaign(s) over 1 unit</small>
+                        </div>
+                        <div class="demand-summary-metric">
+                            <span>Avg. Future Demand / Campaign</span>
+                            <strong>{escape(fmt_num(average_future_demand, 1))}</strong>
+                            <small>{len(qualifying_future_values)} campaign(s) over 1 unit</small>
+                        </div>
+                    </div>
+                    <div class="demand-summary-section">
+                        <div class="demand-summary-row demand-summary-emphasis">
+                            <span>Customer Orders</span>
+                            <strong>{escape(fmt_num(row_field(row, "cust_orders")))}</strong>
+                        </div>
+                    </div>
+                    <div class="demand-summary-section">
+                        <div class="demand-summary-row demand-summary-emphasis">
+                            <span>Total NA Inventory</span>
+                            <strong>{escape(fmt_num(row_field(row, "total_na_inv")))}</strong>
+                        </div>
+                        <div class="demand-summary-row demand-summary-child">
+                            <span>↳ On Hand / NA OH</span>
+                            <strong>{escape(fmt_num(row_field(row, "na_oh")))}</strong>
+                        </div>
+                        <div class="demand-summary-row demand-summary-child">
+                            <span>↳ In Transit / NA AIT</span>
+                            <strong>{escape(fmt_num(row_field(row, "na_ait")))}</strong>
+                        </div>
+                        <div class="demand-summary-row demand-summary-child">
+                            <span>↳ POs</span>
+                            <strong>{escape(fmt_num(row_field(row, "pos")))}</strong>
+                        </div>
+                        <div class="demand-summary-row demand-summary-child">
+                            <span>↳ BOs</span>
+                            <strong>{escape(fmt_num(row_field(row, "bos")))}</strong>
+                        </div>
+                    </div>
+                """
+                st.markdown(
+                    summary_html.replace("\n", ""),
+                    unsafe_allow_html=True,
+                )
 
 
 def render_comments(
