@@ -2973,7 +2973,11 @@ def render_metric_cards(row: pd.Series):
         ("Campaign Coverage", coverage_value, "Campaigns"),
         ("Stockout C with SS", fmt_campaign(row_field(row, "stockout_with_ss")), safety_stock_text),
         ("Stockout C without SS", fmt_campaign(row_field(row, "stockout_no_ss")), safety_stock_text),
-        ("Fill-by Campaign", fmt_campaign(row_field(row, "fill_by_campaign")), "Campaign"),
+        (
+            "Fill-by Campaign",
+            fmt_campaign(row_field(row, "fill_by_campaign")),
+            f"Lead Time = {fmt_num(row_field(row, 'grand_lt_weeks'))} weeks",
+        ),
     ]
     render_kpi_strip(items)
 
