@@ -3404,6 +3404,7 @@ def render_review_dashboard(
         st.stop()
 
     alerts = workbook_alerts(data)
+    sku_jump_key = f"sku_jump_select_{data.meeting_id}"
 
     with workbook_details_placeholder.container():
         if not history_review_mode:
@@ -3510,6 +3511,7 @@ def render_review_dashboard(
                         type="primary" if position == st.session_state["current_pos"] else "secondary",
                     ):
                         st.session_state["current_pos"] = position
+                        st.session_state.pop(sku_jump_key, None)
                         st.rerun()
 
         st.divider()
@@ -3538,6 +3540,7 @@ def render_review_dashboard(
                     disabled=filtered.empty or st.session_state["current_pos"] <= 0,
                 ):
                     st.session_state["current_pos"] -= 1
+                    st.session_state.pop(sku_jump_key, None)
                     st.rerun()
             with title_next:
                 if st.button(
@@ -3548,6 +3551,7 @@ def render_review_dashboard(
                     disabled=filtered.empty or st.session_state["current_pos"] >= len(filtered) - 1,
                 ):
                     st.session_state["current_pos"] += 1
+                    st.session_state.pop(sku_jump_key, None)
                     st.rerun()
 
         if not filtered.empty:
@@ -3567,11 +3571,13 @@ def render_review_dashboard(
     render_exports(data, store)
 
     labels_for_select = [make_sku_label(filtered.iloc[i]) for i in range(len(filtered))]
+    if st.session_state.get(sku_jump_key) not in labels_for_select:
+        st.session_state.pop(sku_jump_key, None)
     selected_label = st.selectbox(
         "SKU Jump",
         labels_for_select,
         index=st.session_state["current_pos"],
-        key=f"sku_jump_select_{data.meeting_id}",
+        key=sku_jump_key,
     )
     selected_pos = labels_for_select.index(selected_label)
     if selected_pos != st.session_state["current_pos"]:
