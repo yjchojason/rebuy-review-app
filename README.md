@@ -1,8 +1,16 @@
 # Inventory Rebuy Review Dashboard
 
-A private local Streamlit app for reviewing bi-weekly inventory rebuy requests one SKU at a time from the `REBUYS` tab of an Excel workbook.
+A Streamlit app for reviewing bi-weekly inventory rebuy requests one SKU at a time from the `REBUYS` tab of an Excel workbook.
 
-The app is designed for the workbook structure found in `BEAUTY REBUYS 6-9-26 PreMeeting.xlsx`, while still detecting campaign columns dynamically so future bi-weekly files can be loaded without changing code.
+The app uses a standardized rebuy workbook structure and detects campaign columns dynamically so future bi-weekly files can be loaded without changing code.
+
+## Try the live demo
+
+1. Open the [Rebuy Review Dashboard](https://rebuyreview.streamlit.app/).
+2. Download the [main demo workbook](https://raw.githubusercontent.com/yjchojason/rebuy-review-app/main/demo_data/Demo_Rebuy.xlsx) and upload it in the Workbook panel.
+3. To try the Past Rebuy section, download [past meeting demo 1](https://raw.githubusercontent.com/yjchojason/rebuy-review-app/main/demo_data/Demo_Rebuy_20261007.xlsx) and [past meeting demo 2](https://raw.githubusercontent.com/yjchojason/rebuy-review-app/main/demo_data/Demo_Rebuy_20261115.xlsx), then upload them from the Past Rebuy Decisions / Meetings page.
+
+You can also [browse all demo files on GitHub](https://github.com/yjchojason/rebuy-review-app/tree/main/demo_data). Every demo workbook contains fictional products, people, suppliers, campaigns, costs, inventory, demand, comments, and decisions.
 
 ## What this app does
 
@@ -21,7 +29,9 @@ The app is designed for the workbook structure found in `BEAUTY REBUYS 6-9-26 Pr
 
 ## Privacy
 
-This app runs locally on your computer. It does not send your workbook or comments to external servers.
+The public deployment is intended only for the fictional workbooks in `demo_data/`. Do not upload confidential or company workbooks to the public demo. Files uploaded to a hosted deployment are processed by that hosted application.
+
+When you run the app locally, workbook data and comments stay on your computer.
 
 Files uploaded through the app are stored in:
 

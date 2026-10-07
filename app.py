@@ -1733,7 +1733,7 @@ def render_review_dashboard(
             uploaded = st.file_uploader("Upload bi-weekly rebuy Excel file", type=["xlsx"])
             local_path = st.text_input(
                 "Or enter local Excel path",
-                placeholder=r"C:\Users\you\Documents\BEAUTY REBUYS.xlsx",
+                placeholder=r"C:\Users\you\Documents\Demo_Rebuy.xlsx",
             )
 
             if uploaded is not None:

@@ -31,6 +31,10 @@ app_data/meeting_history/*
 *.db-wal
 *.db-shm
 
+# Public, sanitized demo workbooks are intentionally tracked.
+!demo_data/
+!demo_data/*.xlsx
+
 # Editor and operating-system files
 .vscode/
 .idea/
